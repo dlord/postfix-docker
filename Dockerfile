@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:trusty
 MAINTAINER John Paul Alcala jp@jpalcala.com
 
 ENV DEBIAN_FRONTEND noninteractive

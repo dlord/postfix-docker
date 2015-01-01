@@ -140,7 +140,7 @@ RUN postconf -e 'postscreen_greet_action = enforce' && \
 # Run script
 COPY postfix.sh /opt/
 
-VOLUME ["/etc/ssl", "/etc/opendkim", "/etc/postfix", "/etc/dovecot", "/etc/spamassassin", "/etc/default", "/etc/clamav", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav", "/var/log"]
+VOLUME ["/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav", "/var/log"]
 
 EXPOSE 25 143 993 587
 

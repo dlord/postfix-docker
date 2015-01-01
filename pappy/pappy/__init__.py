@@ -66,7 +66,7 @@ class UserView(ModelView):
 
     def on_model_change(self, form, model):
         if len(model.password2):
-            salt = '$6$' + os.urandom(64).encode('base_64')[-16:]
+            salt = '$6$' + hashlib.sha512(os.urandom(16).encode('base_64')).hexdigest()[-16:]
             model.password = crypt.crypt(form.password2.data, salt)
 
 admin = Admin(app)

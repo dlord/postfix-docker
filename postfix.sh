@@ -34,7 +34,7 @@ EOF
 
 # dovecot config
 
-cat > /etc/dovecot/conf.d/01-mail-stack-delivery.conf << EOF
+cat > /etc/dovecot/conf.d/99-mail-stack-delivery.conf << EOF
 # Some general options
 protocols = imap sieve
 ssl = yes

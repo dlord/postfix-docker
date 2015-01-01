@@ -133,6 +133,7 @@ service spamassassin start
 service spamass-milter start
 service clamav-daemon start
 service clamav-milter start
+service clamav-freshclam start
 service postfix start
 dovecot
 sleep 3

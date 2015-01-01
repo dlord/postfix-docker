@@ -4,9 +4,11 @@ MAINTAINER John Paul Alcala jp@jpalcala.com
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update && \
     apt-get -y upgrade && \
-    apt-get -y install mail-stack-delivery ca-certificates opendkim opendkim-tools
-RUN apt-get -y install spamass-milter pyzor razor libmail-dkim-perl
-RUN apt-get -y install clamav-milter arj bzip2 cabextract cpio file gzip lzop nomarch p7zip pax rpm unzip zip zoo
+    apt-get -y install \
+        mail-stack-delivery ca-certificates opendkim opendkim-tools \
+        dovecot-mysql spamass-milter pyzor razor libmail-dkim-perl \
+        clamav-milter arj bzip2 cabextract cpio file gzip lzop nomarch p7zip \
+        pax rpm unzip zip zoo
 
 # setup self-signed SSL certificate
 RUN openssl req \

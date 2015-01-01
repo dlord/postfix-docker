@@ -23,8 +23,8 @@ RUN openssl req \
 
 # Environment variables for configuring Postfix at runtime.
 ENV myhostname docker.example.com
-ENV smtpd_helo_restrictions permit_mynetworks, reject_non_fqdn_helo_hostname, reject_invalid_helo_hostname, reject_unknown_helo_hostname, permit
-#ENV smtpd_helo_restrictions permit_sasl_authenticated, permit_mynetworks
+#ENV smtpd_helo_restrictions permit_mynetworks, reject_non_fqdn_helo_hostname, reject_invalid_helo_hostname, reject_unknown_helo_hostname, permit
+ENV smtpd_helo_restrictions permit_sasl_authenticated, permit_mynetworks
 ENV smtpd_recipient_restrictions reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender
 ENV db_host postfixdb
 ENV db_user root

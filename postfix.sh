@@ -114,6 +114,17 @@ default_pass_scheme = SHA512-CRYPT
 password_query = SELECT email as user, password FROM user WHERE email='%u';
 EOF
 
+# OpenDKIM configuration
+cd /etc/opendkim
+opendkim-genkey -r -h sha256 -d $myhostname -s mail && \
+    mv mail.private mail
+
+echo "mail.$myhostname mail.$myhostname:mail:/etc/opendkim/mail" > /etc/opendkim/KeyTable
+echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
+echo "127.0.0.1" > /etc/opendkim/TrustedHosts
+
+chown -R opendkim:opendkim /etc/opendkim
+cd -
 
 # start Postfix and its related services.
 service rsyslog start

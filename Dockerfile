@@ -72,14 +72,6 @@ COPY etc/dovecot/conf.d/* /etc/dovecot/conf.d/
 RUN mkdir /etc/opendkim && \
     chown opendkim:opendkim /etc/opendkim
 
-WORKDIR /etc/opendkim
-RUN opendkim-genkey -r -h sha256 -d $myhostname -s mail && \
-    mv mail.private mail
-RUN echo "mail.$myhostname mail.$myhostname:mail:/etc/opendkim/mail" > /etc/opendkim/KeyTable
-RUN echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
-RUN echo "127.0.0.1" > /etc/opendkim/TrustedHosts
-RUN chown -R opendkim:opendkim /etc/opendkim
-
 COPY etc/opendkim.conf /etc/
 RUN mkdir /var/spool/postfix/opendkim && \
     chown opendkim:root /var/spool/postfix/opendkim

@@ -126,6 +126,12 @@ echo "127.0.0.1" > /etc/opendkim/TrustedHosts
 chown -R opendkim:opendkim /etc/opendkim
 cd -
 
+# Ensure folders have the proper permissions.
+chown -R opendkim:root /var/spool/postfix/opendkim
+chown -R spamd:spamd /var/lib/spamassassin
+chown -R spamd:root /var/spool/postfix/spamassassin/
+chown -R vmail:vmail /var/mail/vmail
+
 # start Postfix and its related services.
 service rsyslog start
 service opendkim start

@@ -1,12 +1,36 @@
 #!/bin/bash
 
 # Set Postfix configuration from environment.
+myhostname=${myhostname:-docker.example.com}
+smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, permit_mynetworks}
+smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
 
 postconf -e "myhostname = $myhostname"
 postconf -e "smtpd_helo_restrictions = $smtpd_helo_restrictions"
 postconf -e "smtpd_recipient_restrictions = $smtpd_recipient_restrictions"
+postconf -e "smtpd_tls_cert_file = /etc/ssl/private/$myhostname.pem" && \
+postconf -e "smtpd_tls_key_file = /etc/ssl/private/$myhostname.key" && \
+
+# setup self-signed SSL certificate if no certificate exists
+if [ ! -f /etc/ssl/private/$myhostname.key ]; then
+    echo "No SSL certificate found for $myhostname. Creating a self-signed one."
+    openssl req \
+        -nodes \
+        -x509 \
+        -newkey rsa:4096 \
+        -keyout /etc/ssl/private/$myhostname.key \
+        -out /etc/ssl/private/$myhostname.pem \
+        -subj "/C=PH/ST=NCR/L=NCR/O=example.com/OU=example.com/CN=example.com" && \
+    chown root:root /etc/ssl/private/$myhostname.* && \
+    chmod 400 /etc/ssl/private/$myhostname.*
+fi
 
 # alias map config
+db_host=${db_host:-postfix-db}
+db_user=${db_user:-root}
+db_password=${db_password:-password}
+db_name=${db_name:-postfix}
+
 cat > /etc/postfix/mysql-virtual-mailbox-domains.cf << EOF
 user = $db_user
 password = $db_password
@@ -33,13 +57,12 @@ EOF
 
 
 # dovecot config
-
 cat > /etc/dovecot/conf.d/99-mail-stack-delivery.conf << EOF
 # Some general options
 protocols = imap sieve
 ssl = yes
-ssl_cert = </etc/ssl/private/ssl-mail.pem
-ssl_key = </etc/ssl/private/ssl-mail.key
+ssl_cert = </etc/ssl/private/$myhostname.pem
+ssl_key = </etc/ssl/private/$myhostname.key
 ssl_client_ca_dir = /etc/ssl/certs
 ssl_cipher_list = ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AES:RSA+3DES:!ADH:!AECDH:!MD5:!DSS
 mail_home = /var/mail/vmail/%d/%n
@@ -115,16 +138,35 @@ password_query = SELECT email as user, password FROM user WHERE email='%u';
 EOF
 
 # OpenDKIM configuration
-cd /etc/opendkim
-opendkim-genkey -r -h sha256 -d $myhostname -s mail && \
-    mv mail.private mail
+if [ ! -f /etc/opendkim/mail ]; then
+    echo "No OpenDKIM key found. Generating a new one."
+    pushd /etc/opendkim > /dev/null
+    opendkim-genkey -r -h sha256 -d $myhostname -s mail && \
+        mv mail.private mail
 
-echo "mail.$myhostname mail.$myhostname:mail:/etc/opendkim/mail" > /etc/opendkim/KeyTable
-echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
-echo "127.0.0.1" > /etc/opendkim/TrustedHosts
+    echo "mail.$myhostname mail.$myhostname:mail:/etc/opendkim/mail" > /etc/opendkim/KeyTable
+    echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
+    echo "127.0.0.1" > /etc/opendkim/TrustedHosts
 
-chown -R opendkim:opendkim /etc/opendkim
-cd -
+    chown -R opendkim:opendkim /etc/opendkim
+    popd > /dev/null
+fi
+
+# ensure spamassasin config is correct
+spamassassin --lint
+
+# Update sieve
+mkdir -p /var/mail/vmail/sieve-before /var/mail/vmail/sieve-after
+
+if find /var/mail/vmail/sieve-before -mindepth 1 -name "*.sieve" -print -quit | grep -q .; then
+    echo "Compiling sieve-before."
+    sievec /var/mail/vmail/sieve-before/*.sieve
+fi
+
+if find /var/mail/vmail/sieve-after -mindepth 1 -name "*.sieve" -print -quit | grep -q .; then
+    echo "Compiling sieve-after."
+    sievec /var/mail/vmail/sieve-after/*.sieve
+fi
 
 # Ensure folders have the proper permissions.
 chown -R opendkim:root /var/spool/postfix/opendkim
@@ -133,14 +175,33 @@ chown -R spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
 
 # start Postfix and its related services.
-service rsyslog start
-service opendkim start
-service spamassassin start
-service spamass-milter start
-service clamav-daemon start
-service clamav-milter start
-service clamav-freshclam start
-service postfix start
-dovecot
-sleep 3
-tail -f /var/log/mail.log
+function start_all() {
+    service rsyslog start
+    service opendkim start
+    service spamassassin start
+    service spamass-milter start
+    service clamav-daemon start
+    service clamav-milter start
+    service clamav-freshclam start
+    service postfix start
+    dovecot
+    sleep 3
+    tail -f /var/log/mail.log
+}
+
+function stop_all() {
+    echo "Shutting down..."
+    dovecot stop
+    service postfix stop
+    service clamav-freshclam stop
+    service clamav-milter stop
+    service clamav-daemon stop
+    service spamass-milter stop
+    service spamassassin stop
+    service opendkim stop
+    service rsyslog stop
+}
+
+trap stop_all EXIT
+
+start_all

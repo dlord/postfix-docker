@@ -184,14 +184,11 @@ function start_all() {
     service clamav-milter start
     service clamav-freshclam start
     service postfix start
-    dovecot
-    sleep 3
-    tail -f /var/log/mail.log
+    dovecot -F
 }
 
 function stop_all() {
     echo "Shutting down..."
-    dovecot stop
     service postfix stop
     service clamav-freshclam stop
     service clamav-milter stop

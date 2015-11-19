@@ -176,6 +176,9 @@ chown -R vmail:vmail /var/mail/vmail
 
 # start Postfix and its related services.
 function start_all() {
+    # ensure that postfix pid file has been removed.
+    rm -f /var/spool/postfix/pid/master.pid
+
     service rsyslog start
     service opendkim start
     service spamassassin start

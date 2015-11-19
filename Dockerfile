@@ -5,10 +5,32 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update && \
     apt-get -y upgrade && \
     apt-get -y install \
-        mail-stack-delivery ca-certificates opendkim opendkim-tools \
-        dovecot-mysql postfix-mysql spamass-milter pyzor razor \
-        libmail-dkim-perl clamav-milter arj bzip2 cabextract cpio file gzip \
-        lzop nomarch p7zip pax rpm unzip zip zoo && \
+        mail-stack-delivery \
+        ca-certificates \
+        opendkim \
+        opendkim-tools \
+        dovecot-mysql \
+        postfix-mysql \
+        spamass-milter \
+        pyzor \
+        razor \
+        libmail-dkim-perl \
+        clamav-milter \
+        arj \
+        bzip2 \
+        cabextract \
+        cpio \
+        file \
+        gzip \
+        lzop \
+        nomarch \
+        p7zip \
+        pax \
+        rpm \
+        unzip \
+        vim \
+        zip \
+        zoo && \
     rm -rf /var/lib/apt/lists/*
 
 COPY etc/ /etc

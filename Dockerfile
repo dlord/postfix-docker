@@ -47,6 +47,11 @@ RUN groupadd -g 5000 vmail && \
     chown clamav:root /var/spool/postfix/clamav/ && \
     chown -R vmail:vmail /var/mail/vmail
 
+# logging setup
+RUN ln -sf /dev/stdout /var/log/syslog && \
+    ln -sf /dev/null /var/log/mail.log && \
+    ln -sf /dev/stderr /var/log/mail.err
+
 # Main postfix configuration
 RUN postconf -e 'mydestination = localhost' && \
     postconf -e 'smtpd_banner = $myhostname ESMTP' && \
@@ -85,7 +90,7 @@ RUN postconf -e 'mydestination = localhost' && \
 # Run script
 COPY postfix.sh /
 
-VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav", "/var/log"]
+VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav"]
 
 EXPOSE 25 143 993 587
 

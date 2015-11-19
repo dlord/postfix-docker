@@ -1,11 +1,5 @@
 require ["envelope", "fileinto", "imap4flags", "regex"];
 
-# Grab any emails from noreply@ayannah.com
-if envelope :contains "From" "@ayannah.com" {
-    fileinto "Inbox";
-    stop;
-}
-
 # Trash messages with improperly formed message IDs
 if not header :regex "message-id" ".*@.*\\." {
     discard;

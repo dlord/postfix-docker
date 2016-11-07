@@ -36,7 +36,7 @@ user = $db_user
 password = $db_password
 dbname = $db_name
 hosts = $db_host
-query = SELECT name FROM domain WHERE name='%s' AND active=true
+query = SELECT name FROM postfix_domain WHERE name='%s' AND active=true
 EOF
 
 cat > /etc/postfix/mysql-virtual-mailbox-maps.cf << EOF
@@ -44,7 +44,7 @@ user = $db_user
 password = $db_password
 dbname = $db_name
 hosts = $db_host
-query = SELECT email FROM user WHERE email='%s' AND active=true
+query = SELECT e.email FROM (SELECT concat(eu.username, '@', d.name) as email FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true) e WHERE e.email='%s'
 EOF
 
 cat > /etc/postfix/mysql-virtual-alias-maps.cf << EOF
@@ -52,7 +52,7 @@ user = $db_user
 password = $db_password
 dbname = $db_name
 hosts = $db_host
-query = SELECT destination FROM alias WHERE source='%s' AND active=true
+query = SELECT destination FROM postfix_alias WHERE source='%s' AND active=true
 EOF
 
 
@@ -134,7 +134,7 @@ cat > /etc/dovecot/dovecot-sql.conf << EOF
 driver = mysql
 connect = host=$db_host dbname=$db_name user=$db_user password=$db_password
 default_pass_scheme = SHA512-CRYPT
-password_query = SELECT email as user, password FROM user WHERE email='%u';
+password_query = SELECT * FROM (SELECT concat(eu.username, '@', d.name) as user, eu.password FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true) e WHERE e.user='%s';
 EOF
 
 # OpenDKIM configuration

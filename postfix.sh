@@ -176,9 +176,10 @@ chown -R vmail:vmail /var/mail/vmail
 
 # start Postfix and its related services.
 function start_all() {
-    # ensure that postfix pid file has been removed.
-    rm -f /var/spool/postfix/pid/master.pid
+    # ensure that postfix and crond pid file has been removed.
+    rm -f /var/spool/postfix/pid/master.pid /var/run/crond.pid
 
+    cron
     service rsyslog start
     service opendkim start
     service spamassassin start
@@ -200,6 +201,7 @@ function stop_all() {
     service spamassassin stop
     service opendkim stop
     service rsyslog stop
+    kill `cat /var/run/crond.pid`
 }
 
 trap stop_all EXIT

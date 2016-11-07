@@ -5,11 +5,19 @@ myhostname=${myhostname:-docker.example.com}
 smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, permit_mynetworks}
 smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
 
+if [ -z ${tls_cert_file+x} ]; then
+    tls_cert_file="/etc/ssl/private/$myhostname.pem"
+fi
+
+if [ -z ${tls_key_file+x} ]; then
+    tls_key_file="/etc/ssl/private/$myhostname.key"
+fi
+
 postconf -e "myhostname = $myhostname"
 postconf -e "smtpd_helo_restrictions = $smtpd_helo_restrictions"
 postconf -e "smtpd_recipient_restrictions = $smtpd_recipient_restrictions"
-postconf -e "smtpd_tls_cert_file = /etc/ssl/private/$myhostname.pem" && \
-postconf -e "smtpd_tls_key_file = /etc/ssl/private/$myhostname.key" && \
+postconf -e "smtpd_tls_cert_file = $tls_cert_file" && \
+postconf -e "smtpd_tls_key_file = $tls_key_file" && \
 
 # setup self-signed SSL certificate if no certificate exists
 if [ ! -f /etc/ssl/private/$myhostname.key ]; then

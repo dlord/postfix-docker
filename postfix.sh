@@ -142,7 +142,7 @@ cat > /etc/dovecot/dovecot-sql.conf << EOF
 driver = mysql
 connect = host=$db_host dbname=$db_name user=$db_user password=$db_password
 default_pass_scheme = SHA512-CRYPT
-password_query = SELECT * FROM (SELECT concat(eu.username, '@', d.name) as user, eu.password FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true) e WHERE e.user='%s';
+password_query = SELECT eu.username as user, d.name as domain, eu.password FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
 EOF
 
 # OpenDKIM configuration

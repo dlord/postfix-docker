@@ -174,6 +174,13 @@ chown -R spamd:spamd /var/lib/spamassassin
 chown -R spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
 
+if [ "$(ls -A /var/lib/clamav)" ]; then
+    echo "Clamav signatures found."
+else
+    echo "Clamav signatures not found. running freshclam for the first time."
+    freshclam
+fi
+
 # start Postfix and its related services.
 function start_all() {
     # ensure that postfix and crond pid file has been removed.

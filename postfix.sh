@@ -20,17 +20,17 @@ postconf -e "smtpd_tls_cert_file = $tls_cert_file" && \
 postconf -e "smtpd_tls_key_file = $tls_key_file" && \
 
 # setup self-signed SSL certificate if no certificate exists
-if [ ! -f /etc/ssl/private/$myhostname.key ]; then
+if [ ! -f "$tls_key_file" ]; then
     echo "No SSL certificate found for $myhostname. Creating a self-signed one."
     openssl req \
         -nodes \
         -x509 \
         -newkey rsa:4096 \
-        -keyout /etc/ssl/private/$myhostname.key \
-        -out /etc/ssl/private/$myhostname.pem \
+        -keyout "$tls_key_file" \
+        -out "$tls_cert_file" \
         -subj "/C=PH/ST=NCR/L=NCR/O=example.com/OU=example.com/CN=example.com" && \
-    chown root:root /etc/ssl/private/$myhostname.* && \
-    chmod 400 /etc/ssl/private/$myhostname.*
+    chown root:root $tls_cert_file $tls_key_file && \
+    chmod 400 $tls_cert_file $tls_key_file
 fi
 
 # alias map config
@@ -69,8 +69,8 @@ cat > /etc/dovecot/conf.d/99-mail-stack-delivery.conf << EOF
 # Some general options
 protocols = imap sieve
 ssl = yes
-ssl_cert = </etc/ssl/private/$myhostname.pem
-ssl_key = </etc/ssl/private/$myhostname.key
+ssl_cert = <$tls_cert_file
+ssl_key = <$tls_key_file
 ssl_client_ca_dir = /etc/ssl/certs
 ssl_cipher_list = ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AES:RSA+3DES:!ADH:!AECDH:!MD5:!DSS
 mail_home = /var/mail/vmail/%d/%n

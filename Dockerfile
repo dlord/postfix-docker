@@ -3,7 +3,6 @@ MAINTAINER John Paul Alcala jp@jpalcala.com
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update && \
-    apt-get -y upgrade && \
     apt-get -y install \
         mail-stack-delivery \
         ca-certificates \

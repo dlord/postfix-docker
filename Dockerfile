@@ -66,12 +66,8 @@ RUN groupadd -g 5000 vmail && \
     chown spamd:root /var/spool/postfix/spamassassin/ && \
     chown -R spamd:spamd /var/lib/spamassassin && \
     chown clamav:root /var/spool/postfix/clamav/ && \
-    chown -R vmail:vmail /var/mail/vmail
-
-# logging setup
-RUN ln -sf /dev/stdout /var/log/syslog && \
-    ln -sf /dev/null /var/log/mail.log && \
-    ln -sf /dev/stderr /var/log/mail.err
+    chown -R vmail:vmail /var/mail/vmail && \
+    touch /var/log/cron.log
 
 # Main postfix configuration
 RUN postconf -e 'mydestination = localhost' && \

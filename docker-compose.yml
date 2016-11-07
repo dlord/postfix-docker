@@ -1,0 +1,56 @@
+---
+version: '2'
+services:
+  postfix-db:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=postfix
+      - MYSQL_USER=postfix
+      - MYSQL_PASSWORD=password
+
+  admin:
+    build: admin/
+    command: /bin/bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./admin:/usr/src/app
+    environment:
+      - DB_NAME=postfix
+      - DB_USER=postfix
+      - DB_PASSWORD=password
+      - DB_HOST=postfix-db
+    links:
+      - "postfix-db"
+    ports:
+      - "8000:8000"
+
+  postfix:
+    build: .
+    environment:
+      - myhostname=localhost
+      - db_user=postfix
+      - db_password=password
+      - db_host=postfix-db
+      - db_name=postfix
+    ports:
+      - "25:25"
+      - "143:143"
+      - "587:587"
+      - "993:993"
+    links:
+      - "postfix-db"
+
+  roundcube-db:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=roundcube
+      - MYSQL_USER=roundcube
+      - MYSQL_PASSWORD=password
+
+  roundcube:
+    image: dlord/roundcube
+    ports:
+      - "80:80"
+    links:
+      - "roundcube-db"

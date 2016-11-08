@@ -16,7 +16,7 @@ ENABLED=1
 # SpamAssassin uses a preforking model, so be careful! You need to
 # make sure --max-children is not set to anything higher than 5,
 # unless you know what you're doing.
-OPTIONS="-x --max-children 5 --helper-home-dir ${SAHOME} -u spamd -g spamd --siteconfigpath ${SAGLOBALCFGPATH} --socketpath=/var/spool/postfix/spamassassin/spamd.sock --socketowner=spamd --socketgroup=spamd --socketmode=0660"
+OPTIONS="-x --max-children 5 --helper-home-dir ${SAHOME} -u debian-spamd -g debian-spamd --siteconfigpath ${SAGLOBALCFGPATH} --socketpath=/var/spool/postfix/spamassassin/spamd.sock --socketowner=debian-spamd --socketgroup=debian-spamd --socketmode=0660"
 
 # Pid file
 # Where should spamd write its PID to file? If you use the -u or

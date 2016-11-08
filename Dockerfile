@@ -39,14 +39,7 @@ COPY var/ /var
 RUN groupadd -g 5000 vmail && \
     useradd -g vmail -u 5000 vmail -d /var/mail/vmail -m && \
     usermod -G opendkim postfix && \
-    adduser \
-        --shell /bin/false \
-        --home /var/lib/spamassassin \
-        --disabled-password \
-        --disabled-login \
-        --gecos "" \
-        spamd && \
-    usermod -a -G spamd spamass-milter && \
+    usermod -a -G debian-spamd spamass-milter && \
     spamassassin --lint && \
     mkdir -p \
         /etc/opendkim \
@@ -63,8 +56,8 @@ RUN groupadd -g 5000 vmail && \
     echo "razorhome = /var/lib/spamassassin/.razor" >> /var/lib/spamassassin/.razor/razor-agent.conf && \
     chown opendkim:opendkim /etc/opendkim && \
     chown opendkim:root /var/spool/postfix/opendkim && \
-    chown spamd:root /var/spool/postfix/spamassassin/ && \
-    chown -R spamd:spamd /var/lib/spamassassin && \
+    chown debian-spamd:root /var/spool/postfix/spamassassin/ && \
+    chown -R debian-spamd:debian-spamd /var/lib/spamassassin && \
     chown clamav:root /var/spool/postfix/clamav/ && \
     chown -R vmail:vmail /var/mail/vmail && \
     touch /var/log/cron.log

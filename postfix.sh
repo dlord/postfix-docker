@@ -192,7 +192,8 @@ fi
 # start Postfix and its related services.
 function start_all() {
     # ensure that postfix and crond pid file has been removed.
-    rm -f /var/spool/postfix/pid/master.pid /var/run/crond.pid
+    rm -f /var/spool/postfix/pid/master.pid
+    cat /dev/null > /var/run/crond.pid
 
     # reset syslog
     cat /dev/null > /var/log/syslog

@@ -199,8 +199,9 @@ function start_all() {
     cat /dev/null > /var/log/syslog
     chown syslog:adm /var/log/syslog
 
-    cron
     service rsyslog start
+    cron
+
     service opendkim start
     service spamassassin start
     service spamass-milter start
@@ -225,9 +226,10 @@ function stop_all() {
     service spamass-milter stop
     service spamassassin stop
     service opendkim stop
-    service rsyslog stop
+
     kill `cat /var/run/crond.pid`
     kill "$TAIL_PID"
+    service rsyslog stop
 }
 
 trap stop_all EXIT

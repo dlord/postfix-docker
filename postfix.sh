@@ -197,6 +197,7 @@ function start_all() {
 
     # reset syslog
     cat /dev/null > /var/log/syslog
+    cat /dev/null > /var/log/cron.log
     chown syslog:adm /var/log/syslog
 
     service rsyslog start

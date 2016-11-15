@@ -60,6 +60,7 @@ RUN groupadd -g 5000 vmail && \
     chown -R debian-spamd:debian-spamd /var/lib/spamassassin && \
     chown clamav:root /var/spool/postfix/clamav/ && \
     chown -R vmail:vmail /var/mail/vmail && \
+    echo "0  */4  * * *   root    /learnspam.sh" >> /etc/crontab && \
     touch /var/log/cron.log
 
 # Main postfix configuration
@@ -99,6 +100,7 @@ RUN postconf -e 'mydestination = localhost' && \
 
 # Run script
 COPY postfix.sh /
+COPY learnspam.sh /
 
 VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav"]
 

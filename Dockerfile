@@ -61,6 +61,7 @@ RUN groupadd -g 5000 vmail && \
     chown clamav:root /var/spool/postfix/clamav/ && \
     chown -R vmail:vmail /var/mail/vmail && \
     echo "0  */4  * * *   root    /learnspam.sh" >> /etc/crontab && \
+    crontab /etc/crontab && \
     touch /var/log/cron.log
 
 # Main postfix configuration

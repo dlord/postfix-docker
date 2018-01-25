@@ -152,7 +152,7 @@ if [ ! -f /etc/opendkim/mail ]; then
     opendkim-genkey -r -h sha256 -d $myhostname -s mail && \
         mv mail.private mail
 
-    echo "mail.$myhostname mail.$myhostname:mail:/etc/opendkim/mail" > /etc/opendkim/KeyTable
+    echo "mail.$myhostname $myhostname:mail:/etc/opendkim/mail" > /etc/opendkim/KeyTable
     echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
     echo "127.0.0.1" > /etc/opendkim/TrustedHosts
 

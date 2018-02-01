@@ -6,6 +6,7 @@ smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, pe
 smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
 dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv2 !SSLv3 !TLSv1'}
 dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256'}
+dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
 smtpd_tls_security_level=${smtpd_tls_security_level:-may}
 smtp_tls_security_level=${smtp_tls_security_level:-may}
 smtpd_tls_ciphers=${smtpd_tls_ciphers:-high}
@@ -91,6 +92,7 @@ cat > /etc/dovecot/conf.d/99-mail-stack-delivery.conf << EOF
 # Some general options
 protocols = imap sieve
 ssl = yes
+verbose_ssl = $dovecot_verbose_ssl
 ssl_cert = <$tls_cert_file
 ssl_key = <$tls_key_file
 ssl_client_ca_dir = /etc/ssl/certs

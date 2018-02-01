@@ -4,6 +4,15 @@
 myhostname=${myhostname:-docker.example.com}
 smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, permit_mynetworks}
 smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
+ssl_cipher_list=${ssl_cipher_list:-'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS'}
+smtpd_tls_security_level=${smtpd_tls_security_level:-may}
+smtp_tls_security_level=${smtp_tls_security_level:-may}
+smtpd_tls_ciphers=${smtpd_tls_ciphers:-high}
+smtp_tls_ciphers=${smtp_tls_ciphers:-high}
+smtpd_tls_mandatory_protocols=${smtpd_tls_mandatory_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
+smtp_tls_mandatory_protocols=${smtp_tls_mandatory_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
+smtpd_tls_protocols=${smtpd_tls_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
+smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
 
 if [ -z ${tls_cert_file+x} ]; then
     tls_cert_file="/etc/ssl/private/$myhostname.pem"
@@ -16,8 +25,16 @@ fi
 postconf -e "myhostname = $myhostname"
 postconf -e "smtpd_helo_restrictions = $smtpd_helo_restrictions"
 postconf -e "smtpd_recipient_restrictions = $smtpd_recipient_restrictions"
-postconf -e "smtpd_tls_cert_file = $tls_cert_file" && \
-postconf -e "smtpd_tls_key_file = $tls_key_file" && \
+postconf -e "smtpd_tls_cert_file = $tls_cert_file"
+postconf -e "smtpd_tls_key_file = $tls_key_file"
+postconf -e "smtpd_tls_security_level = $smtpd_tls_security_level"
+postconf -e "smtp_tls_security_level = $smtp_tls_security_level"
+postconf -e "smtpd_tls_ciphers = $smtpd_tls_ciphers"
+postconf -e "smtp_tls_ciphers = $smtp_tls_ciphers"
+postconf -e "smtpd_tls_mandatory_protocols = $smtpd_tls_mandatory_protocols"
+postconf -e "smtp_tls_mandatory_protocols = $smtp_tls_mandatory_protocols"
+postconf -e "smtpd_tls_protocols = $smtpd_tls_protocols"
+postconf -e "smtp_tls_protocols = $smtp_tls_protocols"
 
 # setup self-signed SSL certificate if no certificate exists
 if [ ! -f "$tls_key_file" ]; then
@@ -72,7 +89,7 @@ ssl = yes
 ssl_cert = <$tls_cert_file
 ssl_key = <$tls_key_file
 ssl_client_ca_dir = /etc/ssl/certs
-ssl_cipher_list = ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AES:RSA+3DES:!ADH:!AECDH:!MD5:!DSS
+ssl_cipher_list = $ssl_cipher_list
 mail_home = /var/mail/vmail/%d/%n
 mail_location = maildir:/var/mail/vmail/%d/%n/mail:LAYOUT=fs
 auth_username_chars = abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890.-_@

@@ -1,22 +1,31 @@
 #!/bin/bash
 
+unwanted_ciphers='CBC'
+default_cipherlist=`openssl ciphers 'HIGH:MEDIUM:!LOW:!ADH:!SSLv2:!EXP:!aNULL:!NULL:!CAMELLIA:!RC4:!MD5:!SEED:!3DES' \
+    | sed -e 's/:/\n/g' \
+    | grep -Ev "$unwanted_ciphers" \
+    | sed -e ':a;N;$!ba;s/\n/:/g'`
+
 # Set Postfix configuration from environment.
 myhostname=${myhostname:-docker.example.com}
 smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, permit_mynetworks}
 smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
-dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv2 !SSLv3 !TLSv1'}
-dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256'}
-dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
 smtpd_tls_security_level=${smtpd_tls_security_level:-may}
 smtp_tls_security_level=${smtp_tls_security_level:-may}
 smtpd_tls_ciphers=${smtpd_tls_ciphers:-high}
 smtp_tls_ciphers=${smtp_tls_ciphers:-high}
-tls_high_cipherlist=${tls_high_cipherlist:-'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256'}
-smtpd_tls_mandatory_protocols=${smtpd_tls_mandatory_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
-smtp_tls_mandatory_protocols=${smtp_tls_mandatory_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
-smtpd_tls_exclude_ciphers=${smtpd_tls_exclude_ciphers:-'aNULL, eNULL, EXPORT, DES, RC4, MD5, PSK, aECDH, EDH-DSS-DES-CBC3-SHA, EDH-RSA-DES-CBC3-SHA, KRB5-DES, CBC3-SHA'}
-smtpd_tls_protocols=${smtpd_tls_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
-smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3,!TLSv1'}
+tls_high_cipherlist=${tls_high_cipherlist:-$default_cipherlist}
+tls_preempt_cipherlist=${tls_preempt_cipherlist:-yes}
+smtpd_tls_mandatory_protocols=${smtpd_tls_mandatory_protocols:-'!SSLv2,!SSLv3'}
+smtpd_tls_protocols=${smtpd_tls_protocols:-'!SSLv2,!SSLv3'}
+smtpd_tls_eecdh_grade=${smtpd_tls_eecdh_grade:-ultra}
+smtp_tls_mandatory_protocols=${smtp_tls_mandatory_protocols:-'!SSLv2,!SSLv3'}
+smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3'}
+
+# Set Dovecot configuration from environment
+dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv2 !SSLv3'}
+dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-$default_cipherlist}
+dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
 
 if [ -z ${tls_cert_file+x} ]; then
     tls_cert_file="/etc/ssl/private/$myhostname.pem"
@@ -24,6 +33,10 @@ fi
 
 if [ -z ${tls_key_file+x} ]; then
     tls_key_file="/etc/ssl/private/$myhostname.key"
+fi
+
+if [ -z ${dhparam_file+x} ]; then
+    dhparam_file="/etc/ssl/private/dhparam.pem"
 fi
 
 postconf -e "myhostname = $myhostname"
@@ -36,10 +49,12 @@ postconf -e "smtp_tls_security_level = $smtp_tls_security_level"
 postconf -e "smtpd_tls_ciphers = $smtpd_tls_ciphers"
 postconf -e "smtp_tls_ciphers = $smtp_tls_ciphers"
 postconf -e "tls_high_cipherlist = $tls_high_cipherlist"
+postconf -e "tls_preempt_cipherlist = $tls_preempt_cipherlist"
 postconf -e "smtpd_tls_mandatory_protocols = $smtpd_tls_mandatory_protocols"
-postconf -e "smtp_tls_mandatory_protocols = $smtp_tls_mandatory_protocols"
-postconf -e "smtpd_tls_exclude_ciphers = $smtpd_tls_exclude_ciphers"
 postconf -e "smtpd_tls_protocols = $smtpd_tls_protocols"
+postconf -e "smtpd_tls_dh1024_param_file = $dhparam_file"
+postconf -e "smtpd_tls_eecdh_grade = $smtpd_tls_eecdh_grade"
+postconf -e "smtp_tls_mandatory_protocols = $smtp_tls_mandatory_protocols"
 postconf -e "smtp_tls_protocols = $smtp_tls_protocols"
 
 # setup self-signed SSL certificate if no certificate exists
@@ -54,6 +69,12 @@ if [ ! -f "$tls_key_file" ]; then
         -subj "/C=PH/ST=NCR/L=NCR/O=example.com/OU=example.com/CN=example.com" && \
     chown root:root $tls_cert_file $tls_key_file && \
     chmod 400 $tls_cert_file $tls_key_file
+fi
+
+# create DH Param file if none is available
+if [ ! -f "$dhparam_file" ]; then
+    echo "No DH param file found. Creating a new one: $dhparam_file"
+    openssl dhparam -out "$dhparam_file" 2048
 fi
 
 # alias map config

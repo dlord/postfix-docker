@@ -27,7 +27,6 @@ RUN apt-get -y update && \
         pax \
         rpm \
         unzip \
-        vim \
         zip \
         zoo && \
     rm -rf /var/lib/apt/lists/*

@@ -66,7 +66,7 @@ if [ ! -f "$tls_key_file" ]; then
         -newkey rsa:4096 \
         -keyout "$tls_key_file" \
         -out "$tls_cert_file" \
-        -subj "/C=PH/ST=NCR/L=NCR/O=example.com/OU=example.com/CN=example.com" && \
+        -subj "/C=PH/ST=NCR/L=NCR/O=$myhostname/OU=$myhostname/CN=$myhostname" && \
     chown root:root $tls_cert_file $tls_key_file && \
     chmod 400 $tls_cert_file $tls_key_file
 fi

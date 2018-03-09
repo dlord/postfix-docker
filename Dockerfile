@@ -59,7 +59,8 @@ RUN groupadd -g 5000 vmail && \
     chown -R debian-spamd:debian-spamd /var/lib/spamassassin && \
     chown clamav:root /var/spool/postfix/clamav/ && \
     chown -R vmail:vmail /var/mail/vmail && \
-    echo "0  */4  * * *   root    /learnspam.sh" >> /etc/crontab && \
+    echo "0 */4 * * *   root    /learnspam.sh" >> /etc/crontab && \
+    echo "0 0 * * *     root    /usr/bin/doveadm quota recalc -A" >> /etc/crontab && \
     crontab /etc/crontab && \
     touch /var/log/cron.log
 

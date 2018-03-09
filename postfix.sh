@@ -26,6 +26,8 @@ smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3'}
 dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv2 !SSLv3'}
 dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-$default_cipherlist}
 dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
+dovecot_mail_debug=${dovecot_mail_debug:-no}
+dovecot_auth_debug=${dovecot_auth_debug:-no}
 
 if [ -z ${tls_cert_file+x} ]; then
     tls_cert_file="/etc/ssl/private/$myhostname.pem"
@@ -123,6 +125,8 @@ ssl_protocols = $dovecot_ssl_protocols
 ssl_cipher_list = $dovecot_ssl_cipher_list
 mail_home = /var/mail/vmail/%d/%n
 mail_location = maildir:/var/mail/vmail/%d/%n/mail:LAYOUT=fs
+mail_debug = $dovecot_mail_debug
+auth_debug = $dovecot_auth_debug
 auth_username_chars = abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890.-_@
 
 # IMAP configuration

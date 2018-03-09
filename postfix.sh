@@ -26,6 +26,7 @@ smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3'}
 dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv2 !SSLv3'}
 dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-$default_cipherlist}
 dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
+dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota'}
 dovecot_mail_debug=${dovecot_mail_debug:-no}
 dovecot_auth_debug=${dovecot_auth_debug:-no}
 
@@ -124,21 +125,25 @@ ssl_dh_parameters_length = 2048
 ssl_protocols = $dovecot_ssl_protocols
 ssl_cipher_list = $dovecot_ssl_cipher_list
 mail_home = /var/mail/vmail/%d/%n
+mail_uid = 5000
+mail_gid = 5000
 mail_location = maildir:/var/mail/vmail/%d/%n/mail:LAYOUT=fs
+mail_plugins = $dovecot_mail_plugins
 mail_debug = $dovecot_mail_debug
 auth_debug = $dovecot_auth_debug
 auth_username_chars = abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890.-_@
 
 # IMAP configuration
 protocol imap {
+    mail_plugins = \$mail_plugins imap_quota
     mail_max_userip_connections = 10
     imap_client_workarounds = delay-newmail tb-extra-mailbox-sep
 }
 
 # LDA configuration
 protocol lda {
+    mail_plugins = \$mail_plugins sieve
     postmaster_address = postmaster@$myhostname
-    mail_plugins = sieve
     quota_full_tempfail = yes
     deliver_log_format = msgid=%m: %$
     rejection_reason = Your message to <%t> was automatically rejected:%n%r
@@ -152,6 +157,7 @@ plugin {
     sieve_after = /var/mail/vmail/sieve-after
 
     quota = maildir:User quota
+    quota_grace = 0%%
     quota_rule = *:storage=2GB
     quota_rule2 = Trash:storage=+10%%
     quota_rule3 = Junk:storage=+10%%
@@ -173,8 +179,12 @@ passdb {
 }
 
 userdb {
-    driver = static
-    args = uid=5000 gid=5000 home=/var/mail/vmail/%d/%n
+    driver = prefetch
+}
+
+userdb {
+    driver = sql
+    args = /etc/dovecot/dovecot-sql.conf
 }
 
 # Log all failed authentication attempts
@@ -194,7 +204,9 @@ cat > /etc/dovecot/dovecot-sql.conf << EOF
 driver = mysql
 connect = host=$db_host dbname=$db_name user=$db_user password=$db_password
 default_pass_scheme = SHA512-CRYPT
-password_query = SELECT eu.username as user, d.name as domain, eu.password FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
+password_query = SELECT eu.username as user, d.name as domain, eu.password, '/var/mail/vmail/%d/%n' as userdb_home, '5000' as userdb_uid, '5000' as userdb_gid, concat('*:storage=', d.user_quota_limit) as userdb_quota_rule FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
+user_query = SELECT '/var/mail/vmail/%d/%n' as home, '5000' as uid, '5000' as gid, concat('*:storage=', d.user_quota_limit) as quota_rule FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
+iterate_query = SELECT eu.username as username, d.name as domain FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true
 EOF
 
 # OpenDKIM configuration

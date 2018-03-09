@@ -7,6 +7,7 @@ class Domain(models.Model):
     active = models.BooleanField(default=True)
     admins = models.ManyToManyField(User, blank=True)
     max_accounts = models.IntegerField(default=5)
+    user_quota_limit = models.CharField(max_length=255, default='2GB')
 
     def __str__(self):
         return self.name

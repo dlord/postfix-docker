@@ -57,6 +57,7 @@ class UserAdmin(BaseUserAdmin):
 
 class DomainAdmin(admin.ModelAdmin):
     list_display = ('name', 'active',)
+    list_editable = ('active',)
     ordering = ['name',]
 
 class EmailUserAdmin(DomainAwareModelAdmin):

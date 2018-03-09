@@ -160,7 +160,7 @@ plugin {
     quota_grace = 0%%
     quota_rule = *:storage=2GB
     quota_rule2 = Trash:storage=+10%%
-    quota_rule3 = Junk:storage=+10%%
+    quota_rule3 = Junk:ignore
 }
 
 # Authentication configuration

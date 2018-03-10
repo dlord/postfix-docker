@@ -245,6 +245,8 @@ chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R debian-spamd:debian-spamd /var/lib/spamassassin
 chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
+chown -R clamav:adm /var/log/clamav/*
+chown clamav:clamav /var/log/clamav
 
 if [ "$(ls -A /var/lib/clamav)" ]; then
     echo "Clamav signatures found."
@@ -261,8 +263,8 @@ function start_all() {
 
     # reset syslog
     cat /dev/null > /var/log/syslog
-    cat /dev/null > /var/log/cron.log
     chown syslog:adm /var/log/syslog
+    touch /var/log/cron.log
 
     service rsyslog start
     cron

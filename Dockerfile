@@ -1,9 +1,10 @@
-FROM ubuntu:trusty
+FROM ubuntu:xenial
 MAINTAINER John Paul Alcala jp@jpalcala.com
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update && \
     apt-get -y install \
+        rsyslog \
         mail-stack-delivery \
         ca-certificates \
         opendkim \
@@ -11,6 +12,7 @@ RUN apt-get -y update && \
         dovecot-mysql \
         postfix-mysql \
         spamass-milter \
+        pflogsumm \
         pyzor \
         razor \
         libmail-dkim-perl \
@@ -29,7 +31,7 @@ RUN apt-get -y update && \
         unzip \
         zip \
         zoo && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /tmp/.[!.]*
 
 COPY etc/ /etc
 COPY var/ /var
@@ -39,6 +41,7 @@ RUN groupadd -g 5000 vmail && \
     useradd -g vmail -u 5000 vmail -d /var/mail/vmail -m && \
     usermod -G opendkim postfix && \
     usermod -a -G debian-spamd spamass-milter && \
+    sa-compile && \
     spamassassin --lint && \
     mkdir -p \
         /etc/opendkim \
@@ -59,7 +62,7 @@ RUN groupadd -g 5000 vmail && \
     chown -R debian-spamd:debian-spamd /var/lib/spamassassin && \
     chown clamav:root /var/spool/postfix/clamav/ && \
     chown -R vmail:vmail /var/mail/vmail && \
-    touch /var/log/cron.log
+    rm -rf /tmp/* /tmp/.[!.]*
 
 # Main postfix configuration
 RUN postconf -e 'mydestination = localhost' && \

@@ -99,6 +99,7 @@ RUN postconf -e 'mydestination = localhost' && \
 # Run script
 COPY postfix.sh /
 COPY learnspam.sh /
+COPY postfix_report.sh /
 
 VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav"]
 

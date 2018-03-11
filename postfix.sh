@@ -220,7 +220,6 @@ if [ ! -f /etc/opendkim/mail ]; then
     echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
     echo "127.0.0.1" > /etc/opendkim/TrustedHosts
 
-    chown -R opendkim:opendkim /etc/opendkim
     popd > /dev/null
 fi
 
@@ -241,6 +240,7 @@ if find /var/mail/vmail/sieve-after -mindepth 1 -name "*.sieve" -print -quit | g
 fi
 
 # Ensure folders have the proper permissions.
+chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R debian-spamd:debian-spamd /var/lib/spamassassin
 chown -R debian-spamd:root /var/spool/postfix/spamassassin/

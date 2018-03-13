@@ -247,6 +247,7 @@ chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
 chown -R clamav:adm /var/log/clamav/*
 chown clamav:clamav /var/log/clamav
+chmod 400 $tls_cert_file $tls_key_file
 
 if [ "$(ls -A /var/lib/clamav)" ]; then
     echo "Clamav signatures found."

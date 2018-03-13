@@ -258,13 +258,14 @@ fi
 # start Postfix and its related services.
 function start_all() {
     # ensure that postfix and crond pid file has been removed.
-    rm -f /var/spool/postfix/pid/master.pid
-    cat /dev/null > /var/run/crond.pid
+    rm -f \
+        /var/spool/postfix/pid/master.pid \
+        /var/run/spamass/spamass.pid \
+        /var/run/opendkim/opendkim.pid \
+        /var/run/crond.pid
 
-    # reset syslog
-    cat /dev/null > /var/log/syslog
-    chown syslog:adm /var/log/syslog
-    touch /var/log/cron.log
+    tail -n 0 -f /var/log/syslog &
+    TAIL_PID=$!
 
     service rsyslog start
     cron
@@ -278,25 +279,36 @@ function start_all() {
     service postfix start
     dovecot
 
-    tail -n 1000 -f /var/log/syslog &
-    TAIL_PID=$!
     wait $TAIL_PID
 }
 
 function stop_all() {
-    echo "Shutting down..."
+    echo "Stopping primary services..."
     dovecot stop
-    service postfix stop
+    postfix stop
     service clamav-freshclam stop
     service clamav-milter stop
     service clamav-daemon stop
-    service spamass-milter stop
-    service spamassassin stop
-    service opendkim stop
 
+    kill `cat /var/run/spamass/spamass.pid`
+    wait `cat /var/run/spamass/spamass.pid` 2>/dev/null
+
+    service spamassassin stop
+
+    kill `cat /var/run/opendkim/opendkim.pid`
+    wait `cat /var/run/opendkim/opendkim.pid` 2>/dev/null
+
+    echo "Stopping cron and rsyslog..."
     kill `cat /var/run/crond.pid`
+    wait `cat /var/run/crond.pid` 2>/dev/null
+    kill `cat /var/run/rsyslogd.pid`
+    wait `cat /var/run/rsyslogd.pid` 2>/dev/null
+
+    echo "Stopping remaining processes..."
     kill "$TAIL_PID"
-    service rsyslog stop
+    wait "$TAIL_PID" 2>/dev/null
+
+    echo "Shutdown complete!"
 }
 
 trap stop_all EXIT

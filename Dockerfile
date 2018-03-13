@@ -101,7 +101,7 @@ COPY postfix.sh /
 COPY learnspam.sh /
 COPY postfix_report.sh /
 
-VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/clamav"]
+VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/dovecot", "/var/lib/clamav", "/var/lib/logrotate", "/var/log"]
 
 EXPOSE 25 143 993 587
 

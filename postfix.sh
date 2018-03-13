@@ -204,9 +204,50 @@ cat > /etc/dovecot/dovecot-sql.conf << EOF
 driver = mysql
 connect = host=$db_host dbname=$db_name user=$db_user password=$db_password
 default_pass_scheme = SHA512-CRYPT
-password_query = SELECT eu.username as user, d.name as domain, eu.password, '/var/mail/vmail/%d/%n' as userdb_home, '5000' as userdb_uid, '5000' as userdb_gid, concat('*:storage=', d.user_quota_limit) as userdb_quota_rule FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
-user_query = SELECT '/var/mail/vmail/%d/%n' as home, '5000' as uid, '5000' as gid, concat('*:storage=', d.user_quota_limit) as quota_rule FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
-iterate_query = SELECT eu.username as username, d.name as domain FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true
+password_query = \
+    SELECT \
+        eu.username as user, \
+        d.name as domain, \
+        eu.password, \
+        '/var/mail/vmail/%d/%n' as userdb_home, \
+        '5000' as userdb_uid, \
+        '5000' as userdb_gid, \
+        concat('*:storage=', d.user_quota_limit) as userdb_quota_rule \
+    FROM \
+        postfix_emailuser eu, \
+        postfix_domain d \
+    WHERE \
+        d.id=eu.domain_id \
+        AND eu.active=true \
+        AND d.active=true \
+        AND eu.username='%n' \
+        and d.name='%d'
+user_query = \
+    SELECT \
+        '/var/mail/vmail/%d/%n' as home, \
+        '5000' as uid, \
+        '5000' as gid, \
+        concat('*:storage=', d.user_quota_limit) as quota_rule \
+    FROM \
+        postfix_emailuser eu, \
+        postfix_domain d \
+    WHERE \
+        d.id=eu.domain_id \
+        AND eu.active=true \
+        AND d.active=true \
+        AND eu.username='%n' \
+        and d.name='%d'
+iterate_query = \
+    SELECT \
+        eu.username as username, \
+        d.name as domain \
+    FROM \
+        postfix_emailuser eu, \
+        postfix_domain d \
+    WHERE \
+        d.id=eu.domain_id \
+        AND eu.active=true \
+        AND d.active=true
 EOF
 
 # OpenDKIM configuration

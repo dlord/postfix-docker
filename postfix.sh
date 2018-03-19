@@ -338,22 +338,17 @@ function stop_all() {
     service clamav-daemon stop
 
     kill `cat /var/run/spamass/spamass.pid`
-    wait `cat /var/run/spamass/spamass.pid` 2>/dev/null
 
     service spamassassin stop
 
     kill `cat /var/run/opendkim/opendkim.pid`
-    wait `cat /var/run/opendkim/opendkim.pid` 2>/dev/null
 
     echo "Stopping cron and rsyslog..."
     kill `cat /var/run/crond.pid`
-    wait `cat /var/run/crond.pid` 2>/dev/null
     kill `cat /var/run/rsyslogd.pid`
-    wait `cat /var/run/rsyslogd.pid` 2>/dev/null
 
     echo "Stopping remaining processes..."
     kill "$TAIL_PID"
-    wait "$TAIL_PID" 2>/dev/null
 
     echo "Shutdown complete!"
 }

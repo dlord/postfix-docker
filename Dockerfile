@@ -13,6 +13,7 @@ RUN apt-get -y update && \
         postfix-mysql \
         spamass-milter \
         pflogsumm \
+        logwatch \
         pyzor \
         razor \
         libmail-dkim-perl \
@@ -31,7 +32,11 @@ RUN apt-get -y update && \
         unzip \
         zip \
         zoo && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /tmp/.[!.]*
+    rm -rf \
+        /var/lib/apt/lists/* \
+        /tmp/* \
+        /tmp/.[!.]* \
+        /etc/cron.weekly/fstrim
 
 COPY etc/ /etc
 COPY var/ /var

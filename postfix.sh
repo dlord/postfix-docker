@@ -30,6 +30,11 @@ dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota'}
 dovecot_mail_debug=${dovecot_mail_debug:-no}
 dovecot_auth_debug=${dovecot_auth_debug:-no}
 
+# Export environment variables for cron use
+cat > /postfix_env << EOF
+myhostname=$myhostname
+EOF
+
 if [ -z ${tls_cert_file+x} ]; then
     tls_cert_file="/etc/ssl/private/$myhostname.pem"
 fi

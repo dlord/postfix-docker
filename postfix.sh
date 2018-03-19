@@ -285,14 +285,20 @@ if find /var/mail/vmail/sieve-after -mindepth 1 -name "*.sieve" -print -quit | g
     sievec /var/mail/vmail/sieve-after/*.sieve
 fi
 
-# Ensure folders have the proper permissions.
+# Ensure files/folders have the proper permissions.
 chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R debian-spamd:debian-spamd /var/lib/spamassassin
 chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
-chown -R clamav:adm /var/log/clamav/*
-chown clamav:clamav /var/log/clamav
+
+chown -R root:root /var/log/*
+chown -R clamav:clamav /var/log/clamav
+
+chown root:utmp /var/log/btmp* /var/log/lastlog* /var/log/wtmp*
+chown root:adm /var/log/dmesg*
+chown syslog:adm /var/log/kern.log* /var/log/mail* /var/log/syslog*
+
 chmod 400 $tls_cert_file $tls_key_file
 
 if [ "$(ls -A /var/lib/clamav)" ]; then

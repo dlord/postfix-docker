@@ -7,7 +7,10 @@
 SAHOME="/var/lib/spamassassin"
 SAGLOBALCFGPATH="/etc/spamassassin"
 
-# Change to one to enable spamd
+# If you're using systemd (default for jessie), the ENABLED setting is
+# not used. Instead, enable spamd by issuing:
+# systemctl enable spamassassin.service
+# Change to "1" to enable spamd on systems using sysvinit:
 ENABLED=1
 
 # Options

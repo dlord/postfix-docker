@@ -30,6 +30,11 @@ dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota'}
 dovecot_mail_debug=${dovecot_mail_debug:-no}
 dovecot_auth_debug=${dovecot_auth_debug:-no}
 
+# Export environment variables for cron use
+cat > /postfix_env << EOF
+myhostname=$myhostname
+EOF
+
 if [ -z ${tls_cert_file+x} ]; then
     tls_cert_file="/etc/ssl/private/$myhostname.pem"
 fi
@@ -204,9 +209,50 @@ cat > /etc/dovecot/dovecot-sql.conf << EOF
 driver = mysql
 connect = host=$db_host dbname=$db_name user=$db_user password=$db_password
 default_pass_scheme = SHA512-CRYPT
-password_query = SELECT eu.username as user, d.name as domain, eu.password, '/var/mail/vmail/%d/%n' as userdb_home, '5000' as userdb_uid, '5000' as userdb_gid, concat('*:storage=', d.user_quota_limit) as userdb_quota_rule FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
-user_query = SELECT '/var/mail/vmail/%d/%n' as home, '5000' as uid, '5000' as gid, concat('*:storage=', d.user_quota_limit) as quota_rule FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true AND eu.username='%n' and d.name='%d'
-iterate_query = SELECT eu.username as username, d.name as domain FROM postfix_emailuser eu, postfix_domain d WHERE d.id=eu.domain_id AND eu.active=true AND d.active=true
+password_query = \
+    SELECT \
+        eu.username as user, \
+        d.name as domain, \
+        eu.password, \
+        '/var/mail/vmail/%d/%n' as userdb_home, \
+        '5000' as userdb_uid, \
+        '5000' as userdb_gid, \
+        concat('*:storage=', d.user_quota_limit) as userdb_quota_rule \
+    FROM \
+        postfix_emailuser eu, \
+        postfix_domain d \
+    WHERE \
+        d.id=eu.domain_id \
+        AND eu.active=true \
+        AND d.active=true \
+        AND eu.username='%n' \
+        and d.name='%d'
+user_query = \
+    SELECT \
+        '/var/mail/vmail/%d/%n' as home, \
+        '5000' as uid, \
+        '5000' as gid, \
+        concat('*:storage=', d.user_quota_limit) as quota_rule \
+    FROM \
+        postfix_emailuser eu, \
+        postfix_domain d \
+    WHERE \
+        d.id=eu.domain_id \
+        AND eu.active=true \
+        AND d.active=true \
+        AND eu.username='%n' \
+        and d.name='%d'
+iterate_query = \
+    SELECT \
+        eu.username as username, \
+        d.name as domain \
+    FROM \
+        postfix_emailuser eu, \
+        postfix_domain d \
+    WHERE \
+        d.id=eu.domain_id \
+        AND eu.active=true \
+        AND d.active=true
 EOF
 
 # OpenDKIM configuration
@@ -220,7 +266,6 @@ if [ ! -f /etc/opendkim/mail ]; then
     echo "*@$myhostname mail.$myhostname" > /etc/opendkim/SigningTable
     echo "127.0.0.1" > /etc/opendkim/TrustedHosts
 
-    chown -R opendkim:opendkim /etc/opendkim
     popd > /dev/null
 fi
 
@@ -240,11 +285,21 @@ if find /var/mail/vmail/sieve-after -mindepth 1 -name "*.sieve" -print -quit | g
     sievec /var/mail/vmail/sieve-after/*.sieve
 fi
 
-# Ensure folders have the proper permissions.
+# Ensure files/folders have the proper permissions.
+chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R debian-spamd:debian-spamd /var/lib/spamassassin
 chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
+
+chown -R root:root /var/log/*
+chown -R clamav:clamav /var/log/clamav
+
+chown root:utmp /var/log/btmp* /var/log/lastlog* /var/log/wtmp*
+chown root:adm /var/log/dmesg*
+chown syslog:adm /var/log/kern.log* /var/log/mail* /var/log/syslog*
+
+chmod 400 $tls_cert_file $tls_key_file
 
 if [ "$(ls -A /var/lib/clamav)" ]; then
     echo "Clamav signatures found."
@@ -256,13 +311,14 @@ fi
 # start Postfix and its related services.
 function start_all() {
     # ensure that postfix and crond pid file has been removed.
-    rm -f /var/spool/postfix/pid/master.pid
-    cat /dev/null > /var/run/crond.pid
+    rm -f \
+        /var/spool/postfix/pid/master.pid \
+        /var/run/spamass/spamass.pid \
+        /var/run/opendkim/opendkim.pid \
+        /var/run/crond.pid
 
-    # reset syslog
-    cat /dev/null > /var/log/syslog
-    cat /dev/null > /var/log/cron.log
-    chown syslog:adm /var/log/syslog
+    tail -n 0 -f /var/log/syslog &
+    TAIL_PID=$!
 
     service rsyslog start
     cron
@@ -276,25 +332,31 @@ function start_all() {
     service postfix start
     dovecot
 
-    tail -n 1000 -f /var/log/syslog &
-    TAIL_PID=$!
     wait $TAIL_PID
 }
 
 function stop_all() {
-    echo "Shutting down..."
+    echo "Stopping primary services..."
     dovecot stop
-    service postfix stop
+    postfix stop
     service clamav-freshclam stop
     service clamav-milter stop
     service clamav-daemon stop
-    service spamass-milter stop
-    service spamassassin stop
-    service opendkim stop
 
+    kill `cat /var/run/spamass/spamass.pid`
+
+    service spamassassin stop
+
+    kill `cat /var/run/opendkim/opendkim.pid`
+
+    echo "Stopping cron and rsyslog..."
     kill `cat /var/run/crond.pid`
+    kill `cat /var/run/rsyslogd.pid`
+
+    echo "Stopping remaining processes..."
     kill "$TAIL_PID"
-    service rsyslog stop
+
+    echo "Shutdown complete!"
 }
 
 trap stop_all EXIT

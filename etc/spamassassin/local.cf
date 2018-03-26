@@ -18,6 +18,7 @@ ok_locales en
 ## Set Pyzor & Razor config file paths
 razor_config /var/lib/spamassassin/.razor/razor-agent.conf
 pyzor_options --homedir /var/lib/spamassassin/.pyzor
+pyzor_timeout 15
 
 #   Add *****SPAM***** to the Subject header of spam e-mails
 #
@@ -64,8 +65,13 @@ pyzor_options --homedir /var/lib/spamassassin/.pyzor
 # bayes_ignore_header X-Spam-Status
 
 
+#   Whether to decode non- UTF-8 and non-ASCII textual parts and recode
+#   them to UTF-8 before the text is given over to rules processing.
+#
+# normalize_charset 1
+
 #   Some shortcircuiting, if the plugin is enabled
-# 
+#
 ifplugin Mail::SpamAssassin::Plugin::Shortcircuit
 #
 #   default: strongly-whitelisted mails are *really* whitelisted now, if the

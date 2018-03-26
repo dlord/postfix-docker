@@ -32,6 +32,7 @@ RUN apt-get -y update && \
         unzip \
         zip \
         zoo && \
+    sed -i "s/^exit 101$/exit 0/" /usr/sbin/policy-rc.d && \
     rm -rf \
         /var/lib/apt/lists/* \
         /tmp/* \

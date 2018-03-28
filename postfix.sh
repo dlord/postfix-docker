@@ -293,7 +293,7 @@ chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
 
 chown -R root:root /var/log/*
-chown -R clamav:clamav /var/log/clamav
+chown -R clamav:clamav /var/log/clamav /var/lib/clamav
 
 chown root:utmp /var/log/btmp* /var/log/lastlog* /var/log/wtmp*
 chown root:adm /var/log/dmesg*

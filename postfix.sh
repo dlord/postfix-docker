@@ -317,7 +317,7 @@ function start_all() {
         /var/run/opendkim/opendkim.pid \
         /var/run/crond.pid
 
-    tail -n 0 -f /var/log/syslog &
+    tail -n 0 -F /var/log/syslog &
     TAIL_PID=$!
 
     service rsyslog start

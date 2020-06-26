@@ -285,12 +285,16 @@ if find /var/mail/vmail/sieve-after -mindepth 1 -name "*.sieve" -print -quit | g
     sievec /var/mail/vmail/sieve-after/*.sieve
 fi
 
+# Create postfix folder if it doesn't exist
+mkdir -p /var/lib/postfix
+
 # Ensure files/folders have the proper permissions.
 chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R debian-spamd:debian-spamd /var/lib/spamassassin
 chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
+chown -R postfix:postfix /var/lib/postfix
 
 chown -R root:root /var/log/*
 chown -R clamav:clamav /var/log/clamav /var/lib/clamav

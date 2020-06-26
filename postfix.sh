@@ -319,7 +319,7 @@ function start_all() {
         /var/spool/postfix/pid/master.pid \
         /var/run/spamass/spamass.pid \
         /var/run/opendkim/opendkim.pid \
-        /var/run/crond.pid
+        /var/run/*.pid
 
     tail -n 0 -F /var/log/syslog &
     TAIL_PID=$!

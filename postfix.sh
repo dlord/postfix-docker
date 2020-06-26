@@ -9,7 +9,7 @@ default_cipherlist=`openssl ciphers 'HIGH:MEDIUM:!LOW:!ADH:!SSLv2:!EXP:!aNULL:!N
 # Set Postfix configuration from environment.
 myhostname=${myhostname:-docker.example.com}
 smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, permit_mynetworks}
-smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
+smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unverified_recipient, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
 smtpd_tls_security_level=${smtpd_tls_security_level:-may}
 smtp_tls_security_level=${smtp_tls_security_level:-may}
 smtpd_tls_ciphers=${smtpd_tls_ciphers:-high}
@@ -285,15 +285,19 @@ if find /var/mail/vmail/sieve-after -mindepth 1 -name "*.sieve" -print -quit | g
     sievec /var/mail/vmail/sieve-after/*.sieve
 fi
 
+# Create postfix folder if it doesn't exist
+mkdir -p /var/lib/postfix
+
 # Ensure files/folders have the proper permissions.
 chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R debian-spamd:debian-spamd /var/lib/spamassassin
 chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
+chown -R postfix:postfix /var/lib/postfix
 
 chown -R root:root /var/log/*
-chown -R clamav:clamav /var/log/clamav
+chown -R clamav:clamav /var/log/clamav /var/lib/clamav
 
 chown root:utmp /var/log/btmp* /var/log/lastlog* /var/log/wtmp*
 chown root:adm /var/log/dmesg*
@@ -315,9 +319,9 @@ function start_all() {
         /var/spool/postfix/pid/master.pid \
         /var/run/spamass/spamass.pid \
         /var/run/opendkim/opendkim.pid \
-        /var/run/crond.pid
+        /var/run/*.pid
 
-    tail -n 0 -f /var/log/syslog &
+    tail -n 0 -F /var/log/syslog &
     TAIL_PID=$!
 
     service rsyslog start

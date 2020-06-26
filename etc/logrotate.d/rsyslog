@@ -7,7 +7,7 @@
 	delaycompress
 	compress
 	postrotate
-		invoke-rc.d rsyslog rotate > /dev/null
+		kill -HUP $(cat /var/run/rsyslogd.pid) > /dev/null
 	endscript
 }
 
@@ -22,6 +22,9 @@
     create
     compress
     start 0
+	postrotate
+		kill -HUP $(cat /var/run/rsyslogd.pid) > /dev/null
+	endscript
 }
 
 /var/log/daemon.log
@@ -41,6 +44,6 @@
 	delaycompress
 	sharedscripts
 	postrotate
-		invoke-rc.d rsyslog rotate > /dev/null
+		kill -HUP $(cat /var/run/rsyslogd.pid) > /dev/null
 	endscript
 }

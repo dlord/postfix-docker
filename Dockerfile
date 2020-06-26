@@ -79,6 +79,7 @@ RUN postconf -e 'mydestination = localhost' && \
     postconf -e 'unknown_address_reject_code = 550' && \
     postconf -e 'unknown_hostname_reject_code = 550' && \
     postconf -e 'unknown_client_reject_code = 550' && \
+    postconf -e 'unverified_recipient_reject_code = 550' && \
     postconf -e 'smtpd_tls_ask_ccert = yes' && \
     postconf -e 'smtpd_tls_CAfile = /etc/ssl/certs/ca-certificates.crt' && \
     postconf -e 'smtpd_tls_loglevel = 1' && \
@@ -107,7 +108,7 @@ COPY postfix.sh /
 COPY learnspam.sh /
 COPY postfix_report.sh /
 
-VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/dovecot", "/var/lib/clamav", "/var/lib/logrotate", "/var/log"]
+VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/dovecot", "/var/lib/clamav", "/var/lib/logrotate", "/var/lib/postfix", "/var/log"]
 
 EXPOSE 25 143 993 587
 

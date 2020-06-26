@@ -9,7 +9,7 @@ default_cipherlist=`openssl ciphers 'HIGH:MEDIUM:!LOW:!ADH:!SSLv2:!EXP:!aNULL:!N
 # Set Postfix configuration from environment.
 myhostname=${myhostname:-docker.example.com}
 smtpd_helo_restrictions=${smtpd_helo_restrictions:-permit_sasl_authenticated, permit_mynetworks}
-smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
+smtpd_recipient_restrictions=${smtpd_recipient_restrictions:-reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unverified_recipient, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender}
 smtpd_tls_security_level=${smtpd_tls_security_level:-may}
 smtp_tls_security_level=${smtp_tls_security_level:-may}
 smtpd_tls_ciphers=${smtpd_tls_ciphers:-high}

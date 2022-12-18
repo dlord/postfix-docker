@@ -324,8 +324,10 @@ function start_all() {
     tail -n 0 -F /var/log/syslog &
     TAIL_PID=$!
 
-    service rsyslog start
+    rsyslogd -n &
     cron
+    echo "Giving time for rsyslog to start up..."
+    sleep 5
 
     service opendkim start
     service spamassassin start

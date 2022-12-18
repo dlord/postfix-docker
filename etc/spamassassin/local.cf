@@ -18,7 +18,7 @@ ok_locales en
 ## Set Pyzor & Razor config file paths
 razor_config /var/lib/spamassassin/.razor/razor-agent.conf
 pyzor_options --homedir /var/lib/spamassassin/.pyzor
-pyzor_timeout 15
+pyzor_timeout 60
 
 #   Add *****SPAM***** to the Subject header of spam e-mails
 #

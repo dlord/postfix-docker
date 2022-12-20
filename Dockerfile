@@ -101,7 +101,7 @@ RUN postconf -e 'mydestination = localhost' && \
     postconf -e 'postscreen_greet_action = enforce' && \
     postconf -e 'postscreen_dnsbl_action = enforce' && \
     postconf -e 'postscreen_access_list = permit_mynetworks' && \
-    postconf -e 'postscreen_dnsbl_sites = zen.spamhaus.org=127.0.0.[2..11], b.barracudacentral.org=127.0.0.[2..11], bl.spamcop.net=127.0.0.[2..11]'
+    postconf -e 'postscreen_dnsbl_sites = b.barracudacentral.org=127.0.0.[2..11], bl.spamcop.net=127.0.0.[2..11]'
 
 # Run script
 COPY postfix.sh /

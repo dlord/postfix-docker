@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:jammy
 MAINTAINER John Paul Alcala jp@jpalcala.com
 
 ENV DEBIAN_FRONTEND noninteractive

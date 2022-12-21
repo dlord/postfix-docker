@@ -23,7 +23,7 @@ smtp_tls_mandatory_protocols=${smtp_tls_mandatory_protocols:-'!SSLv2,!SSLv3'}
 smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3'}
 
 # Set Dovecot configuration from environment
-dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv2 !SSLv3'}
+dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv3'}
 dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-$default_cipherlist}
 dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
 dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota'}
@@ -126,8 +126,7 @@ ssl_cert = <$tls_cert_file
 ssl_key = <$tls_key_file
 ssl_client_ca_dir = /etc/ssl/certs
 ssl_prefer_server_ciphers = yes
-ssl_dh_parameters_length = 2048
-ssl_protocols = $dovecot_ssl_protocols
+ssl_min_protocol = $dovecot_ssl_protocols
 ssl_cipher_list = $dovecot_ssl_cipher_list
 mail_home = /var/mail/vmail/%d/%n
 mail_uid = 5000
@@ -269,9 +268,6 @@ if [ ! -f /etc/opendkim/mail ]; then
     popd > /dev/null
 fi
 
-# ensure spamassasin config is correct
-spamassassin --lint
-
 # Update sieve
 mkdir -p /var/mail/vmail/sieve-before /var/mail/vmail/sieve-after
 
@@ -291,8 +287,6 @@ mkdir -p /var/lib/postfix
 # Ensure files/folders have the proper permissions.
 chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
-chown -R debian-spamd:debian-spamd /var/lib/spamassassin
-chown -R debian-spamd:root /var/spool/postfix/spamassassin/
 chown -R vmail:vmail /var/mail/vmail
 chown -R postfix:postfix /var/lib/postfix
 
@@ -317,7 +311,6 @@ function start_all() {
     # ensure that postfix and crond pid file has been removed.
     rm -f \
         /var/spool/postfix/pid/master.pid \
-        /var/run/spamass/spamass.pid \
         /var/run/opendkim/opendkim.pid \
         /var/run/*.pid
 
@@ -330,8 +323,7 @@ function start_all() {
     sleep 5
 
     service opendkim start
-    service spamassassin start
-    service spamass-milter start
+    service rspamd start
     service clamav-daemon start
     service clamav-milter start
     service clamav-freshclam start
@@ -348,10 +340,7 @@ function stop_all() {
     service clamav-freshclam stop
     service clamav-milter stop
     service clamav-daemon stop
-
-    kill `cat /var/run/spamass/spamass.pid`
-
-    service spamassassin stop
+    service rspamd stop
 
     kill `cat /var/run/opendkim/opendkim.pid`
 

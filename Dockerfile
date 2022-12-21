@@ -4,6 +4,9 @@ MAINTAINER John Paul Alcala jp@jpalcala.com
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update \
     && apt-get -y install \
+        lsb-release \
+        curl \
+        gpg \
         rsyslog \
         ca-certificates \
         opendkim \
@@ -32,6 +35,13 @@ RUN apt-get -y update \
         unzip \
         zip \
     && sed -i "s/^exit 101$/exit 0/" /usr/sbin/policy-rc.d \
+    && CODENAME=`lsb_release -c -s` \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -SL https://rspamd.com/apt-stable/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/rspamd.gpg > /dev/null \
+    && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] http://rspamd.com/apt-stable/ $CODENAME main" | tee /etc/apt/sources.list.d/rspamd.list \
+    && echo "deb-src [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] http://rspamd.com/apt-stable/ $CODENAME main"  | tee -a /etc/apt/sources.list.d/rspamd.list \
+    && apt-get -y update \
+    && apt-get -y --no-install-recommends install rspamd \
     && rm -rf \
         /var/lib/apt/lists/* \
         /tmp/* \
@@ -49,6 +59,7 @@ RUN groupadd -g 5000 vmail \
         /etc/opendkim \
         /var/spool/postfix/opendkim \
         /var/spool/postfix/clamav \
+        /var/spool/postfix/rspamd \
     # pyzor --homedir /var/lib/spamassassin/.pyzor discover \
     # razor-admin -home=/var/lib/spamassassin/.razor -register \
     # razor-admin -home=/var/lib/spamassassin/.razor -create \
@@ -56,9 +67,8 @@ RUN groupadd -g 5000 vmail \
     # echo "razorhome = /var/lib/spamassassin/.razor" >> /var/lib/spamassassin/.razor/razor-agent.conf \
     && chown opendkim:opendkim /etc/opendkim \
     && chown opendkim:root /var/spool/postfix/opendkim \
-    # chown debian-spamd:root /var/spool/postfix/spamassassin/ \
-    # chown -R debian-spamd:debian-spamd /var/lib/spamassassin \
     && chown clamav:root /var/spool/postfix/clamav/ \
+    && chown _rspamd:_rspamd /var/spool/postfix/rspamd \
     && chown -R vmail:vmail /var/mail/vmail \
     && rm -rf /tmp/* /tmp/.[!.]*
 
@@ -90,7 +100,7 @@ RUN postconf -e 'mailbox_command = /usr/lib/dovecot/deliver -c /etc/dovecot/dove
     && postconf -e 'milter_default_action = accept' \
     && postconf -e 'milter_connect_macros = j {daemon_name} v {if_name} _' \
     && postconf -e 'non_smtpd_milters = $smtpd_milters' \
-    && postconf -e 'smtpd_milters = unix:/spamass/spamass.sock unix:/clamav/clamav-milter.ctl unix:/opendkim/opendkim.sock' \
+    && postconf -e 'smtpd_milters = unix:/rspamd/rspamd.sock unix:/clamav/clamav-milter.ctl unix:/opendkim/opendkim.sock' \
     && postconf -e 'postscreen_greet_action = enforce' \
     && postconf -e 'postscreen_dnsbl_action = enforce' \
     && postconf -e 'postscreen_access_list = permit_mynetworks' \
@@ -101,7 +111,7 @@ COPY postfix.sh /
 COPY learnspam.sh /
 COPY postfix_report.sh /
 
-VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/spamassassin", "/var/lib/dovecot", "/var/lib/clamav", "/var/lib/logrotate", "/var/lib/postfix", "/var/log"]
+VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/rspamd", "/var/lib/dovecot", "/var/lib/clamav", "/var/lib/logrotate", "/var/lib/postfix", "/var/log"]
 
 EXPOSE 25 143 993 587
 

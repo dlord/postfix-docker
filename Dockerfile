@@ -59,7 +59,6 @@ RUN groupadd -g 5000 vmail \
         /etc/opendkim \
         /var/spool/postfix/opendkim \
         /var/spool/postfix/clamav \
-        /var/spool/postfix/rspamd \
     # pyzor --homedir /var/lib/spamassassin/.pyzor discover \
     # razor-admin -home=/var/lib/spamassassin/.razor -register \
     # razor-admin -home=/var/lib/spamassassin/.razor -create \
@@ -68,7 +67,6 @@ RUN groupadd -g 5000 vmail \
     && chown opendkim:opendkim /etc/opendkim \
     && chown opendkim:root /var/spool/postfix/opendkim \
     && chown clamav:root /var/spool/postfix/clamav/ \
-    && chown _rspamd:_rspamd /var/spool/postfix/rspamd \
     && chown -R vmail:vmail /var/mail/vmail \
     && rm -rf /tmp/* /tmp/.[!.]*
 
@@ -99,8 +97,9 @@ RUN postconf -e 'mailbox_command = /usr/lib/dovecot/deliver -c /etc/dovecot/dove
     && postconf -e 'virtual_alias_maps = mysql:/etc/postfix/mysql-virtual-alias-maps.cf' \
     && postconf -e 'milter_default_action = accept' \
     && postconf -e 'milter_connect_macros = j {daemon_name} v {if_name} _' \
+    && postconf -e 'milter_mail_macros=i {mail_addr} {client_addr} {client_name} {auth_authen}' \
     && postconf -e 'non_smtpd_milters = $smtpd_milters' \
-    && postconf -e 'smtpd_milters = unix:/rspamd/rspamd.sock unix:/clamav/clamav-milter.ctl unix:/opendkim/opendkim.sock' \
+    && postconf -e 'smtpd_milters = inet:127.0.0.1:11332 unix:/clamav/clamav-milter.ctl unix:/opendkim/opendkim.sock' \
     && postconf -e 'postscreen_greet_action = enforce' \
     && postconf -e 'postscreen_dnsbl_action = enforce' \
     && postconf -e 'postscreen_access_list = permit_mynetworks' \
@@ -113,7 +112,7 @@ COPY postfix_report.sh /
 
 VOLUME ["/etc/opendkim", "/etc/ssl/private", "/var/mail", "/var/lib/rspamd", "/var/lib/dovecot", "/var/lib/clamav", "/var/lib/logrotate", "/var/lib/postfix", "/var/log"]
 
-EXPOSE 25 143 993 587
+EXPOSE 25 143 993 587 11334
 
 WORKDIR /
 CMD ["/postfix.sh"]

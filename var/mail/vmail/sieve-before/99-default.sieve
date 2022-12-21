@@ -7,12 +7,12 @@ if not header :regex "message-id" ".*@.*\\." {
 }
 
 # File low-level spam in spam bucket, and viruses in Infected folder
-if anyof (header :contains "X-Spam-Level" "*****",
-          header :contains "X-Virus-Status" "Infected") {
-    if header :contains "X-Spam-Level" "*****" {
-        fileinto "Junk";
-        setflag "\\Seen";
-    } else {
-        fileinto "Infected";
-    }
+if header :contains "X-Spam" "Yes" {
+    fileinto :create "Junk";
+    stop;
+}
+
+if header :contains "X-Virus-Status" "Infected" {
+    fileinto :create "Infected";
+    stop;
 }

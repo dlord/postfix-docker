@@ -289,6 +289,7 @@ chown -R opendkim:opendkim /etc/opendkim
 chown -R opendkim:root /var/spool/postfix/opendkim
 chown -R vmail:vmail /var/mail/vmail
 chown -R postfix:postfix /var/lib/postfix
+chown -R _rspamd:_rspamd /var/lib/rspamd
 
 chown -R root:root /var/log/*
 chown -R clamav:clamav /var/log/clamav /var/lib/clamav

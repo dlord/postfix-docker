@@ -23,7 +23,7 @@ smtp_tls_mandatory_protocols=${smtp_tls_mandatory_protocols:-'!SSLv2,!SSLv3'}
 smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3'}
 
 # Set Dovecot configuration from environment
-dovecot_ssl_protocols=${dovecot_ssl_protocols:-'!SSLv3'}
+dovecot_ssl_protocols=${dovecot_ssl_protocols:-'TLSv1.2'}
 dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-$default_cipherlist}
 dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
 dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota'}

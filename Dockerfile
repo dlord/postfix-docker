@@ -46,7 +46,8 @@ RUN apt-get -y update \
         /var/lib/apt/lists/* \
         /tmp/* \
         /tmp/.[!.]* \
-        /etc/cron.weekly/fstrim
+        /etc/cron.weekly/fstrim \
+        /etc/dovecot/conf.d/10-ssl.conf
 
 COPY etc/ /etc
 COPY var/ /var

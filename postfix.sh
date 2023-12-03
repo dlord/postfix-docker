@@ -1,5 +1,7 @@
 #!/bin/bash
 
+imap_only=${imap_only:-'false'}
+
 unwanted_ciphers='CBC'
 default_cipherlist=`openssl ciphers 'HIGH:MEDIUM:!LOW:!ADH:!SSLv2:!EXP:!aNULL:!NULL:!CAMELLIA:!RC4:!MD5:!SEED:!3DES' \
     | sed -e 's/:/\n/g' \
@@ -331,12 +333,15 @@ function start_all() {
     echo "Giving time for rsyslog to start up..."
     sleep 5
 
-    service opendkim start
-    service rspamd start
-    service clamav-daemon start
-    service clamav-milter start
-    service clamav-freshclam start
-    service postfix start
+    if [ "$imap_only" = "false" ]; then
+        service opendkim start
+        service rspamd start
+        service clamav-daemon start
+        service clamav-milter start
+        service clamav-freshclam start
+        service postfix start
+    fi
+
     dovecot
 
     wait $TAIL_PID
@@ -344,14 +349,18 @@ function start_all() {
 
 function stop_all() {
     echo "Stopping primary services..."
-    dovecot stop
-    postfix stop
-    service clamav-freshclam stop
-    service clamav-milter stop
-    service clamav-daemon stop
-    service rspamd stop
 
-    kill `cat /var/run/opendkim/opendkim.pid`
+    dovecot stop
+
+    if [ "$imap_only" = "false" ]; then
+        postfix stop
+        service clamav-freshclam stop
+        service clamav-milter stop
+        service clamav-daemon stop
+        service rspamd stop
+
+        kill `cat /var/run/opendkim/opendkim.pid`
+    fi
 
     echo "Stopping cron and rsyslog..."
     kill `cat /var/run/crond.pid`

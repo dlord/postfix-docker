@@ -26,9 +26,11 @@ smtp_tls_protocols=${smtp_tls_protocols:-'!SSLv2,!SSLv3'}
 dovecot_ssl_protocols=${dovecot_ssl_protocols:-'TLSv1.2'}
 dovecot_ssl_cipher_list=${dovecot_ssl_cipher_list:-$default_cipherlist}
 dovecot_verbose_ssl=${dovecot_verbose_ssl:-no}
-dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota'}
+dovecot_mail_plugins=${dovecot_mail_plugins:-'$mail_plugins quota fts fts_solr'}
 dovecot_mail_debug=${dovecot_mail_debug:-no}
 dovecot_auth_debug=${dovecot_auth_debug:-no}
+dovecot_fts_solr_url=${dovecot_fts_solr_url:-'http://solr:8983/solr/dovecot'}
+dovecot_fts_tika_url=${dovecot_fts_tika_url:-'http://apache-tika-server:9998/tika'}
 
 # Export environment variables for cron use
 cat > /postfix_env << EOF
@@ -165,6 +167,12 @@ plugin {
     quota_rule = *:storage=2GB
     quota_rule2 = Trash:storage=+10%%
     quota_rule3 = Junk:ignore
+
+    fts = solr
+    fts_autoindex = yes
+    fts_enforced = yes
+    fts_solr = url=$dovecot_fts_solr_url
+    fts_tika = $dovecot_fts_tika_url
 }
 
 # Authentication configuration

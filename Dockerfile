@@ -14,6 +14,7 @@ RUN apt-get -y update \
         dovecot-imapd \
         dovecot-mysql \
         dovecot-managesieved \
+        dovecot-solr \
         postfix-mysql \
         pflogsumm \
         logwatch \
